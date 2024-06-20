@@ -8,5 +8,7 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/kloki/bigbrainwordle"
 
 [dependencies]
+crossterm = "0.27.0"
 rand = "0.8.5"
+ratatui = "0.26.3"
 rayon = "1.10.0"
