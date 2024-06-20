@@ -6,6 +6,16 @@ pub enum FeedbackType {
     Wrong(char),
 }
 
+impl FeedbackType {
+    pub fn block(&self) -> char {
+        match self {
+            FeedbackType::Correct(_) => '🟩',
+            FeedbackType::WrongPosition(_) => '🟨',
+            FeedbackType::Wrong(_) => '⬜',
+        }
+    }
+}
+
 #[derive(Hash, Eq, PartialEq)]
 pub enum FB {
     C,
@@ -54,6 +64,9 @@ impl Feedback {
         Feedback::new(answer)
     }
 
+    pub fn blocks(&self) -> String {
+        self.items.iter().map(|x| x.block()).collect()
+    }
     pub fn mask(&self) -> [FB; 5] {
         [
             self.items[0].into(),

@@ -7,15 +7,7 @@ use crate::entropy::{
 mod data;
 mod entropy;
 pub fn print_emoji(result: &Feedback) {
-    print!("          ");
-    for i in result.items.iter() {
-        match i {
-            FeedbackType::Correct(_) => print!("🟩",),
-            FeedbackType::WrongPosition(_) => print!("🟨"),
-            FeedbackType::Wrong(_) => print!("⬜"),
-        }
-    }
-    println!(" ");
+    println!("          {}", result.blocks());
 }
 
 pub fn get_use_input() -> String {
