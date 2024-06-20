@@ -3,6 +3,10 @@ name = "bigbrainwordle"
 version = "0.1.0"
 edition = "2021"
 
+description = "A cli tool that helps you solve the daily wordle"
+license = "MIT OR Apache-2.0"
+repository = "https://github.com/kloki/bigbrainwordle"
+
 [dependencies]
 rand = "0.8.5"
 rayon = "1.10.0"
