@@ -6,6 +6,7 @@ use ratatui::{
     layout::{Constraint, Direction, Layout},
     style::{Color, Style},
     terminal::Terminal,
+    text::{Line, Span, Text},
     widgets::{Paragraph, Widget, Wrap},
     Frame,
 };
@@ -113,22 +114,32 @@ impl App {
     }
 
     pub fn header(&self) -> impl Widget {
-        Paragraph::new(" BigBrainWordle 󰧑 ").style(Style::default().fg(Color::Green))
+        Paragraph::new(" BigBrainWordle 󰧑").style(Style::default().fg(Color::Green))
     }
 
     pub fn instuctions(&self) -> impl Widget {
         let content = match self.state {
-            AppState::Playing => format!(
-                "Next try: '{}'",
-                self.current.iter().collect::<String>()
-            ),
-            AppState::Won => format!("The correct word is '{}'",
-                self.current.iter().collect::<String>()
-            ),
+            AppState::Playing =>
+                match self.row {
+                    0 => Text::from(Line::from(vec![
+                            Span::raw("Lets start with: "),
+                            Span::styled(self.current.iter().collect::<String>(),Style::default().fg(Color::Green)),
+                            Span::raw(". Fill in the correct letters with (g)reen, (y)ellow and space for no match. Enter to confirm."),
+                    ])),
+                    _ => Text::from(Line::from(vec![
+                            Span::raw("Next Suggestion: "),
+                            Span::styled(self.current.iter().collect::<String>(),Style::default().fg(Color::Green)),
+                    ]))
+                }
+            ,
+            AppState::Won => Text::from(Line::from(vec![
+                    Span::raw("Solved! 🎉  the solution is "),
+                    Span::styled(self.current.iter().collect::<String>(),Style::default().fg(Color::Green))
+            ])),
             AppState::Lost =>
-                "Lost! We didn't have enough guesses".to_string(),
+                Text::styled("Lost! We didn't have enough guesses....".to_string(),Style::default().fg(Color::Red)),
             AppState::Failed =>
-                "None the words I know match the feedback. Either we made a mistake or the word is not in my dictionary. Please try again.".to_string(),
+                Text::styled("None the words I know match the feedback. Either we made a mistake or the word is not in my dictionary.".to_string(),Style::default().fg(Color::Red)),
         };
 
         Paragraph::new(content).wrap(Wrap { trim: true })
