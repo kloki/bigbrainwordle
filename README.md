@@ -1,4 +1,21 @@
+![Example](./example.png)
+
 # BigBrainWordle
+
+The assistens that help you cheat with wordle. Uses an entropy approach to find
+determine the next word
+
+## Install
+
+```
+cargo install bigbrainwordle
+```
+
+## Run
+
+```
+bigbrainwordle
+```
 
 ## References
 
