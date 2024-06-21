@@ -40,8 +40,11 @@ impl Brain {
         if self.options.contains(&OPENER) {
             return Ok(OPENER);
         }
-        //best_guess(&self.options, &self.valid)
         Ok(suggest_word(&self.options, &self.valid))
+    }
+
+    pub fn done(&self) -> bool {
+        self.options.len() == 1
     }
 
     pub fn prune(&mut self, feedback: Feedback) {

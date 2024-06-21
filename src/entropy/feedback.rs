@@ -32,6 +32,7 @@ impl From<FeedbackType> for FB {
         }
     }
 }
+#[derive(Copy, Clone)]
 pub struct Feedback {
     pub items: [FeedbackType; 5],
 }
@@ -64,9 +65,6 @@ impl Feedback {
         Feedback::new(answer)
     }
 
-    pub fn blocks(&self) -> String {
-        self.items.iter().map(|x| x.block()).collect()
-    }
     pub fn mask(&self) -> [FB; 5] {
         [
             self.items[0].into(),
@@ -75,6 +73,13 @@ impl Feedback {
             self.items[3].into(),
             self.items[4].into(),
         ]
+    }
+
+    pub fn is_correct(&self) -> bool {
+        self.items.iter().all(|x| match x {
+            FeedbackType::Correct(_) => true,
+            _ => false,
+        })
     }
 }
 #[cfg(test)]
