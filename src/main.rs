@@ -28,5 +28,8 @@ fn main() -> io::Result<()> {
 
     app.run(&mut terminal)?;
     crossterm::terminal::disable_raw_mode()?;
+
+    println!("\n\n\n\n\n");
+
     Ok(())
 }

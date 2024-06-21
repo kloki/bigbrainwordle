@@ -6,7 +6,7 @@ use ratatui::{
     layout::{Constraint, Direction, Layout},
     style::{Color, Style},
     terminal::Terminal,
-    widgets::{Block, Paragraph, Widget, Wrap},
+    widgets::{Paragraph, Widget, Wrap},
     Frame,
 };
 
@@ -45,8 +45,8 @@ impl App {
         }
     }
     pub fn run<B: Backend>(&mut self, term: &mut Terminal<B>) -> io::Result<()> {
-        term.draw(|f| self.draw(f))?;
         loop {
+            term.draw(|f| self.draw(f))?;
             if let Event::Key(key) = event::read()? {
                 match (key.code, self.row, self.column) {
                     (KeyCode::Char('q'), _, _) => return Ok(()),
@@ -75,9 +75,10 @@ impl App {
                     _ => {}
                 }
             }
-            term.draw(|f| self.draw(f))?;
 
             if self.state != AppState::Playing {
+                //draw again for the last time
+                term.draw(|f| self.draw(f))?;
                 return Ok(());
             }
         }
@@ -101,17 +102,18 @@ impl App {
             return;
         }
         self.brain.prune(feedback);
-        match self.brain.suggest(self.column == 5) {
+        match self.brain.suggest(self.row == 5) {
             Ok(word) => self.current = word,
             Err(_) => self.state = AppState::Failed,
         }
         if self.brain.done() {
-            self.state = AppState::Failed;
+            self.feedbacks[self.row + 1] = [Some(FeedbackType::Correct('a')); 5];
+            self.state = AppState::Won;
         }
     }
 
     pub fn header(&self) -> impl Widget {
-        Paragraph::new("BigBrainWordle 󰧑 ").style(Style::default().fg(Color::Green))
+        Paragraph::new(" BigBrainWordle 󰧑 ").style(Style::default().fg(Color::Green))
     }
 
     pub fn instuctions(&self) -> impl Widget {
