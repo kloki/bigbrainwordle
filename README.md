@@ -2,8 +2,7 @@
 
 # BigBrainWordle
 
-The assistens that help you cheat with wordle. Uses an entropy approach to find
-determine the next word
+The assistant that help you cheat with wordle. Uses an entropy approach to determine the next word.
 
 ## Install
 
