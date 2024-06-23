@@ -87,7 +87,7 @@ impl App {
                         self.feedbacks[r][c - 1] = None;
                         self.column -= 1;
                     }
-                    (KeyCode::Enter, r, 5) if r < 5 => {
+                    (KeyCode::Enter, _, 5) => {
                         self.process_feedback();
                         self.column = 0;
                         self.row += 1;
@@ -117,18 +117,17 @@ impl App {
             return;
         }
 
-        if self.row == 5 {
-            self.state = AppState::Lost;
-            return;
-        }
         self.brain.prune(feedback);
-        match self.brain.suggest(self.row == 5) {
+        match self.brain.suggest(self.row == 4) {
             Ok(word) => self.current = word,
             Err(_) => self.state = AppState::Failed,
         }
-        if self.brain.done() {
+
+        if self.brain.done() && self.row != 5 {
             self.feedbacks[self.row + 1] = [Some(FeedbackType::Correct('a')); 5];
             self.state = AppState::Won;
+        } else if self.row == 5 {
+            self.state = AppState::Lost;
         }
     }
 
@@ -140,6 +139,7 @@ impl App {
         let content = match self.state {
             AppState::Playing => match self.row {
                 0 => message(text::OPENING, self.current_word()),
+                5 => message(text::CLOSING, self.current_word()),
                 _ => message(
                     text::suggestion_text(self.brain.options.len()),
                     self.current_word(),

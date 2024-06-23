@@ -3,6 +3,8 @@ pub const OPENING: (&str, &str) = (
     ". Put it in wordle's feedback with 'g' for 🟩, 'y' for 🟨 and ' ' for ⬜ Press enter to confirm.",
 );
 
+pub const CLOSING: (&str, &str) = ("Last change! Lets try ", ". 🤞");
+
 pub const WON: (&str, &str) = ("🎉 Solved! The word was ", ". Bye! 👋");
 
 pub const LOST: &str = "Lost! We ran out of words to suggest. Better luck next time!";
