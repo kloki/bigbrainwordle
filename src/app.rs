@@ -11,9 +11,12 @@ use ratatui::{
     Frame,
 };
 
-use crate::entropy::{
-    brain::Brain,
-    feedback::{Feedback, FeedbackType},
+use crate::{
+    entropy::{
+        brain::Brain,
+        feedback::{Feedback, FeedbackType},
+    },
+    text,
 };
 
 #[derive(PartialEq, Eq)]
@@ -33,6 +36,18 @@ pub struct App {
     state: AppState,
 }
 
+pub fn red_text(text: &str) -> Text {
+    Text::styled(text, Style::default().fg(Color::Red))
+}
+
+pub fn message<'a>(text: (&'a str, &'a str), highlight: String) -> Text<'a> {
+    Text::from(Line::from(vec![
+        Span::raw(text.0),
+        Span::styled(highlight, Style::default().fg(Color::Green)),
+        Span::raw(text.1),
+    ]))
+}
+
 impl App {
     pub fn new(brain: Brain) -> Self {
         let current = brain.suggest(false).expect("No words to suggest");
@@ -44,6 +59,10 @@ impl App {
             current,
             state: AppState::Playing,
         }
+    }
+
+    pub fn current_word(&self) -> String {
+        self.current.iter().collect::<String>()
     }
     pub fn run<B: Backend>(&mut self, term: &mut Terminal<B>) -> io::Result<()> {
         loop {
@@ -114,32 +133,21 @@ impl App {
     }
 
     pub fn header(&self) -> impl Widget {
-        Paragraph::new(" BigBrainWordle 󰧑").style(Style::default().fg(Color::Green))
+        Paragraph::new("BigBrainWordle 󰧑").style(Style::default().fg(Color::Green))
     }
 
     pub fn instuctions(&self) -> impl Widget {
         let content = match self.state {
-            AppState::Playing =>
-                match self.row {
-                    0 => Text::from(Line::from(vec![
-                            Span::raw("Lets start with: "),
-                            Span::styled(self.current.iter().collect::<String>(),Style::default().fg(Color::Green)),
-                            Span::raw(". Fill in the correct letters with (g)reen, (y)ellow and space for no match. Enter to confirm."),
-                    ])),
-                    _ => Text::from(Line::from(vec![
-                            Span::raw("Next Suggestion: "),
-                            Span::styled(self.current.iter().collect::<String>(),Style::default().fg(Color::Green)),
-                    ]))
-                }
-            ,
-            AppState::Won => Text::from(Line::from(vec![
-                    Span::raw("Solved! 🎉  the solution is "),
-                    Span::styled(self.current.iter().collect::<String>(),Style::default().fg(Color::Green))
-            ])),
-            AppState::Lost =>
-                Text::styled("Lost! We didn't have enough guesses....".to_string(),Style::default().fg(Color::Red)),
-            AppState::Failed =>
-                Text::styled("None the words I know match the feedback. Either we made a mistake or the word is not in my dictionary.".to_string(),Style::default().fg(Color::Red)),
+            AppState::Playing => match self.row {
+                0 => message(text::OPENING, self.current_word()),
+                _ => message(
+                    text::suggestion_text(self.brain.options.len()),
+                    self.current_word(),
+                ),
+            },
+            AppState::Won => message(text::WON, self.current_word()),
+            AppState::Lost => red_text(text::LOST),
+            AppState::Failed => red_text(text::FAILED),
         };
 
         Paragraph::new(content).wrap(Wrap { trim: true })
@@ -169,16 +177,16 @@ impl App {
     }
     pub fn draw(&self, f: &mut Frame) {
         let layout = Layout::default()
-            .direction(Direction::Vertical)
-            .constraints(vec![Constraint::Length(2), Constraint::Length(8)])
+            .direction(Direction::Horizontal)
+            .constraints(vec![Constraint::Length(15), Constraint::Length(50)])
             .split(f.size());
 
-        let body = Layout::default()
-            .direction(Direction::Horizontal)
-            .constraints(vec![Constraint::Length(15), Constraint::Length(30)])
+        let right = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(vec![Constraint::Length(2), Constraint::Length(8)])
             .split(layout[1]);
-        f.render_widget(self.header(), layout[0]);
-        f.render_widget(self.instuctions(), body[1]);
-        f.render_widget(self.board(), body[0]);
+        f.render_widget(self.header(), right[0]);
+        f.render_widget(self.instuctions(), right[1]);
+        f.render_widget(self.board(), layout[0]);
     }
 }

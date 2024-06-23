@@ -11,10 +11,12 @@ use ratatui::{
 mod app;
 mod data;
 mod entropy;
+mod text;
 fn main() -> io::Result<()> {
     let words = load_words();
     let brain = Brain::new(words);
     let mut app = App::new(brain);
+    println!("\n");
 
     crossterm::terminal::enable_raw_mode()?;
     let stdout = io::stdout();
