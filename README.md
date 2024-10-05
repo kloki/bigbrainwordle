@@ -7,7 +7,7 @@ The assistant that help you cheat with wordle. Uses an entropy approach to deter
 ## Install
 
 ```
-cargo install bigbrainwordle
+cargo install bigbrainwordle --locked
 ```
 
 ## Run
