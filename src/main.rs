@@ -1,13 +1,9 @@
-use std::io;
-
 use app::App;
 use data::load_words;
 use entropy::brain::Brain;
-use ratatui::{
-    backend::CrosstermBackend,
-    terminal::{Terminal, Viewport},
-    TerminalOptions,
-};
+use ratatui::{TerminalOptions, Viewport};
+use std::io;
+
 mod app;
 mod data;
 mod entropy;
@@ -18,18 +14,13 @@ fn main() -> io::Result<()> {
     let mut app = App::new(brain);
     println!("\n");
 
-    crossterm::terminal::enable_raw_mode()?;
-    let stdout = io::stdout();
-    let backend = CrosstermBackend::new(stdout);
-    let mut terminal = Terminal::with_options(
-        backend,
-        TerminalOptions {
-            viewport: Viewport::Inline(9),
-        },
-    )?;
+    let mut terminal = ratatui::try_init_with_options(TerminalOptions {
+        viewport: Viewport::Inline(9),
+    })?;
 
     app.run(&mut terminal)?;
-    crossterm::terminal::disable_raw_mode()?;
+
+    ratatui::try_restore()?;
 
     println!("\n\n\n\n\n");
 

@@ -1,15 +1,13 @@
-use std::io;
-
-use crossterm::event::{self, Event, KeyCode};
 use ratatui::{
     backend::Backend,
+    crossterm::event::{self, Event, KeyCode},
     layout::{Constraint, Direction, Layout},
     style::{Color, Style},
-    terminal::Terminal,
     text::{Line, Span, Text},
     widgets::{Paragraph, Widget, Wrap},
-    Frame,
+    Frame, Terminal,
 };
+use std::io;
 
 use crate::{
     entropy::{
@@ -179,7 +177,7 @@ impl App {
         let layout = Layout::default()
             .direction(Direction::Horizontal)
             .constraints(vec![Constraint::Length(15), Constraint::Length(50)])
-            .split(f.size());
+            .split(f.area());
 
         let right = Layout::default()
             .direction(Direction::Vertical)
