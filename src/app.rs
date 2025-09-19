@@ -1,13 +1,14 @@
+use std::io;
+
 use ratatui::{
+    Frame, Terminal,
     backend::Backend,
     crossterm::event::{self, Event, KeyCode},
     layout::{Constraint, Direction, Layout},
     style::{Color, Style},
     text::{Line, Span, Text},
     widgets::{Paragraph, Widget, Wrap},
-    Frame, Terminal,
 };
-use std::io;
 
 use crate::{
     entropy::{
@@ -34,7 +35,7 @@ pub struct App {
     state: AppState,
 }
 
-pub fn red_text(text: &str) -> Text {
+pub fn red_text<'a>(text: &'a str) -> Text<'a> {
     Text::styled(text, Style::default().fg(Color::Red))
 }
 
