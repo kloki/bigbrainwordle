@@ -1,13 +1,13 @@
 use std::io;
 
 use ratatui::{
-    Frame, Terminal,
     backend::Backend,
     crossterm::event::{self, Event, KeyCode},
     layout::{Constraint, Direction, Layout},
     style::{Color, Style},
     text::{Line, Span, Text},
     widgets::{Paragraph, Widget, Wrap},
+    Frame, Terminal,
 };
 
 use crate::{
@@ -96,8 +96,8 @@ impl App {
             }
 
             if self.state != AppState::Playing {
-                //draw again for the last time
                 term.draw(|f| self.draw(f))?;
+                let _ = event::read()?;
                 return Ok(());
             }
         }
