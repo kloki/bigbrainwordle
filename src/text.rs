@@ -5,11 +5,14 @@ pub const OPENING: (&str, &str) = (
 
 pub const CLOSING: (&str, &str) = ("Last change! Lets try ", ". 🤞");
 
-pub const WON: (&str, &str) = ("🎉 Solved! The word was ", ". Bye! 👋");
+pub const WON: (&str, &str) = (
+    "🎉 Solved! The word was ",
+    ". Press the 'ANY' key to leave.",
+);
 
-pub const LOST: &str = "Lost! We ran out of words to suggest. Better luck next time!";
+pub const LOST: &str = "Lost! 🤦 We ran out of words to suggest. Better luck next time!. Press the 'ANY' key to leave.";
 
-pub const FAILED: &str = "👹 None the words I know match the feedback. Either we made a mistake or the word is not in my dictionary.";
+pub const FAILED: &str = "👹 None the words I know match the feedback. Either we made a mistake or the word is not in my dictionary. Press the 'ANY' key to leave.";
 
 pub const SUGGESTIONS: [(&str, &str); 8] = [
     ("Interesting! 🧐 Next, try ", "."),
