@@ -6,6 +6,10 @@ The assistant that help you cheat with wordle. Uses an entropy approach to deter
 
 ## Install
 
+Check [Releases](https://github.com/kloki/bigbrainwordle/releases) for binaries and installers
+
+or
+
 ```
 cargo install bigbrainwordle --locked
 ```

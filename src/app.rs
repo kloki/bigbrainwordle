@@ -67,38 +67,33 @@ impl App {
         loop {
             term.draw(|f| self.draw(f))?;
             if let Event::Key(key) = event::read()? {
-                match (key.code, self.row, self.column) {
-                    (KeyCode::Char('q'), _, _) => return Ok(()),
-                    (KeyCode::Esc, _, _) => return Ok(()),
-                    (KeyCode::Char('g'), r, c) if c < 5 => {
+                match (key.code, self.row, self.column, &self.state) {
+                    (_, _, _, state) if state != &AppState::Playing => return Ok(()),
+                    (KeyCode::Char('q'), _, _, _) => return Ok(()),
+                    (KeyCode::Esc, _, _, _) => return Ok(()),
+                    (KeyCode::Char('g'), r, c, _) if c < 5 => {
                         self.feedbacks[r][c] = Some(FeedbackType::Correct(self.current[c]));
                         self.column += 1;
                     }
-                    (KeyCode::Char('y'), r, c) if c < 5 => {
+                    (KeyCode::Char('y'), r, c, _) if c < 5 => {
                         self.feedbacks[r][c] = Some(FeedbackType::WrongPosition(self.current[c]));
                         self.column += 1;
                     }
-                    (KeyCode::Char(' '), r, c) if c < 5 => {
+                    (KeyCode::Char(' '), r, c, _) if c < 5 => {
                         self.feedbacks[r][c] = Some(FeedbackType::Wrong(self.current[c]));
                         self.column += 1;
                     }
-                    (KeyCode::Backspace, r, c) if c > 0 => {
+                    (KeyCode::Backspace, r, c, _) if c > 0 => {
                         self.feedbacks[r][c - 1] = None;
                         self.column -= 1;
                     }
-                    (KeyCode::Enter, _, 5) => {
+                    (KeyCode::Enter, _, 5, _) => {
                         self.process_feedback();
                         self.column = 0;
                         self.row += 1;
                     }
                     _ => {}
                 }
-            }
-
-            if self.state != AppState::Playing {
-                //draw again for the last time
-                term.draw(|f| self.draw(f))?;
-                return Ok(());
             }
         }
     }

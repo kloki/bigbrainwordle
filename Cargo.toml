@@ -1,6 +1,6 @@
 [package]
 name = "bigbrainwordle"
-version = "0.2.2"
+version = "0.2.3"
 edition = "2021"
 
 description = "A cli tool that helps you solve the daily wordle"
@@ -11,3 +11,8 @@ repository = "https://github.com/kloki/bigbrainwordle"
 rand = "0.8.5"
 ratatui = "0.28.1"
 rayon = "1.10.0"
+
+# The profile that 'dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
