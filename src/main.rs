@@ -67,18 +67,12 @@ fn main() -> io::Result<()> {
         let date = chrono::Local::now().format("%Y-%m-%d").to_string();
         eprintln!("Fetching today's NYT Wordle...");
         Some(fetch_nyt_solution(&date).map_err(|e| {
-            io::Error::new(
-                io::ErrorKind::Other,
-                format!("Failed to fetch NYT puzzle: {}", e),
-            )
+            io::Error::other(format!("Failed to fetch NYT puzzle: {}", e))
         })?)
     } else if let Some(date) = cli.nyt_date {
         eprintln!("Fetching NYT Wordle for {}...", date);
         Some(fetch_nyt_solution(&date).map_err(|e| {
-            io::Error::new(
-                io::ErrorKind::Other,
-                format!("Failed to fetch NYT puzzle: {}", e),
-            )
+            io::Error::other(format!("Failed to fetch NYT puzzle: {}", e))
         })?)
     } else {
         None
