@@ -1,13 +1,13 @@
-use std::{io, time::Duration};
+use std::io;
 
 use ratatui::{
-    Frame, Terminal,
     backend::Backend,
     crossterm::event::{self, Event, KeyCode},
     layout::{Constraint, Direction, Layout},
     style::{Color, Style},
     text::{Line, Span, Text},
     widgets::{Paragraph, Widget, Wrap},
+    Frame, Terminal,
 };
 
 use crate::{
@@ -80,7 +80,6 @@ impl App {
             }
             self.column = 5;
             term.draw(|f| self.draw(f))?;
-            std::thread::sleep(Duration::from_millis(500));
 
             self.process_feedback();
 
@@ -92,7 +91,6 @@ impl App {
             self.row += 1;
 
             term.draw(|f| self.draw(f))?;
-            std::thread::sleep(Duration::from_millis(500));
         }
 
         term.draw(|f| self.draw(f))?;
@@ -213,10 +211,7 @@ impl App {
                                 format!(" {} ", c.to_ascii_uppercase()),
                                 Style::default().fg(Color::Black).bg(Color::DarkGray),
                             ),
-                            None => Span::styled(
-                                " . ",
-                                Style::default().fg(Color::DarkGray),
-                            ),
+                            None => Span::styled(" . ", Style::default().fg(Color::DarkGray)),
                         };
                         spans.push(span);
                     }

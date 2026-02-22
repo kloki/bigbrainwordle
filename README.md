@@ -17,23 +17,27 @@ cargo install bigbrainwordle --locked
 ## Run
 
 Interactive mode — enter feedback manually to get suggestions:
+
 ```
 bigbrainwordle
 ```
 
 Autosolve against a specific word:
+
 ```
-bigbrainwordle --autosolve crane
+bigbrainwordle --autosolve crane --no-emoji
 ```
 
 Autosolve today's NYT Wordle:
+
 ```
-bigbrainwordle --nyt-today
+bigbrainwordle --nyt-today --no-emoji
 ```
 
 Autosolve a past NYT Wordle by date:
+
 ```
-bigbrainwordle --nyt-date 2025-01-15
+bigbrainwordle --nyt-date 2025-01-15 --no-emoji
 ```
 
 ## References

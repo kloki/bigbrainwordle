@@ -1,9 +1,10 @@
+use std::io;
+
 use app::App;
 use clap::Parser;
 use data::load_words;
 use entropy::brain::{Brain, Word};
 use ratatui::{TerminalOptions, Viewport};
-use std::io;
 
 mod app;
 mod data;
