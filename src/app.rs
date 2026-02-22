@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, time::Duration};
 
 use ratatui::{
     Frame, Terminal,
@@ -12,7 +12,7 @@ use ratatui::{
 
 use crate::{
     entropy::{
-        brain::Brain,
+        brain::{Brain, Word},
         feedback::{Feedback, FeedbackType},
     },
     text,
@@ -63,6 +63,45 @@ impl App {
     pub fn current_word(&self) -> String {
         self.current.iter().collect::<String>()
     }
+    pub fn run_autosolve<B: Backend>(
+        &mut self,
+        solution: Word,
+        term: &mut Terminal<B>,
+    ) -> io::Result<()> {
+        term.draw(|f| self.draw(f))?;
+
+        loop {
+            let feedback = Feedback::from_guess(&self.current, &solution);
+
+            for i in 0..5 {
+                self.feedbacks[self.row][i] = Some(feedback.items[i]);
+            }
+            self.column = 5;
+            term.draw(|f| self.draw(f))?;
+            std::thread::sleep(Duration::from_millis(500));
+
+            self.process_feedback();
+
+            if self.state != AppState::Playing {
+                break;
+            }
+
+            self.column = 0;
+            self.row += 1;
+
+            term.draw(|f| self.draw(f))?;
+            std::thread::sleep(Duration::from_millis(500));
+        }
+
+        term.draw(|f| self.draw(f))?;
+
+        loop {
+            if let Event::Key(_) = event::read()? {
+                return Ok(());
+            }
+        }
+    }
+
     pub fn run<B: Backend>(&mut self, term: &mut Terminal<B>) -> io::Result<()> {
         loop {
             term.draw(|f| self.draw(f))?;
