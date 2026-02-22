@@ -76,7 +76,9 @@ impl Feedback {
     }
 
     pub fn is_correct(&self) -> bool {
-        self.items.iter().all(|x| matches!(x, FeedbackType::Correct(_)))
+        self.items
+            .iter()
+            .all(|x| matches!(x, FeedbackType::Correct(_)))
     }
 }
 #[cfg(test)]

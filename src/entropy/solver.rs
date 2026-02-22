@@ -4,7 +4,7 @@ use rayon::prelude::*;
 
 use crate::entropy::{
     brain::Word,
-    feedback::{Feedback, FB},
+    feedback::{FB, Feedback},
 };
 
 pub fn suggest_word(options: &Vec<Word>, valid: &Vec<Word>) -> Word {
