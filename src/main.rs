@@ -30,6 +30,10 @@ struct Cli {
     /// Fetch a specific date's NYT puzzle and autosolve (format: YYYY-MM-DD)
     #[arg(long, conflicts_with_all = ["autosolve", "nyt_today"])]
     nyt_date: Option<String>,
+
+    /// Print letters with colored backgrounds instead of emoji blocks
+    #[arg(long)]
+    no_emoji: bool,
 }
 
 fn fetch_nyt_solution(date: &str) -> Result<Word, Box<dyn std::error::Error>> {
@@ -79,7 +83,7 @@ fn main() -> io::Result<()> {
         None
     };
 
-    let mut app = App::new(brain);
+    let mut app = App::new(brain, cli.no_emoji);
 
     println!("\n");
 

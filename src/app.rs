@@ -33,6 +33,7 @@ pub struct App {
     pub feedbacks: [[Option<FeedbackType>; 5]; 6],
     current: [char; 5],
     state: AppState,
+    no_emoji: bool,
 }
 
 pub fn red_text<'a>(text: &'a str) -> Text<'a> {
@@ -48,7 +49,7 @@ pub fn message<'a>(text: (&'a str, &'a str), highlight: String) -> Text<'a> {
 }
 
 impl App {
-    pub fn new(brain: Brain) -> Self {
+    pub fn new(brain: Brain, no_emoji: bool) -> Self {
         let current = brain.suggest(false).expect("No words to suggest");
         Self {
             brain,
@@ -57,6 +58,7 @@ impl App {
             feedbacks: [[None; 5]; 6],
             current,
             state: AppState::Playing,
+            no_emoji,
         }
     }
 
@@ -157,7 +159,9 @@ impl App {
         }
 
         if self.brain.done() && self.row != 5 {
-            self.feedbacks[self.row + 1] = [Some(FeedbackType::Correct('a')); 5];
+            for i in 0..5 {
+                self.feedbacks[self.row + 1][i] = Some(FeedbackType::Correct(self.current[i]));
+            }
             self.state = AppState::Won;
         } else if self.row == 5 {
             self.state = AppState::Lost;
@@ -187,31 +191,66 @@ impl App {
     }
 
     pub fn board(&self) -> impl Widget {
-        let board = self
-            .feedbacks
-            .iter()
-            .map(|row| {
-                row.iter()
-                    .map(|feedback| feedback.map_or('⬛', |f| f.block()))
-                    .collect::<String>()
-            })
-            .enumerate()
-            .map(|(i, x)| {
-                if i == self.row {
-                    format!(">{}", x)
-                } else {
-                    format!(" {}", x)
-                }
-            })
-            .collect::<Vec<String>>()
-            .join("\n");
+        if self.no_emoji {
+            let lines: Vec<Line> = self
+                .feedbacks
+                .iter()
+                .enumerate()
+                .map(|(i, row)| {
+                    let prefix = if i == self.row { ">" } else { " " };
+                    let mut spans = vec![Span::raw(prefix)];
+                    for feedback in row.iter() {
+                        let span = match feedback {
+                            Some(FeedbackType::Correct(c)) => Span::styled(
+                                format!(" {} ", c.to_ascii_uppercase()),
+                                Style::default().fg(Color::Black).bg(Color::Green),
+                            ),
+                            Some(FeedbackType::WrongPosition(c)) => Span::styled(
+                                format!(" {} ", c.to_ascii_uppercase()),
+                                Style::default().fg(Color::Black).bg(Color::Yellow),
+                            ),
+                            Some(FeedbackType::Wrong(c)) => Span::styled(
+                                format!(" {} ", c.to_ascii_uppercase()),
+                                Style::default().fg(Color::Black).bg(Color::DarkGray),
+                            ),
+                            None => Span::styled(
+                                " . ",
+                                Style::default().fg(Color::DarkGray),
+                            ),
+                        };
+                        spans.push(span);
+                    }
+                    Line::from(spans)
+                })
+                .collect();
+            Paragraph::new(lines)
+        } else {
+            let board = self
+                .feedbacks
+                .iter()
+                .map(|row| {
+                    row.iter()
+                        .map(|feedback| feedback.map_or('⬛', |f| f.block()))
+                        .collect::<String>()
+                })
+                .enumerate()
+                .map(|(i, x)| {
+                    if i == self.row {
+                        format!(">{}", x)
+                    } else {
+                        format!(" {}", x)
+                    }
+                })
+                .collect::<Vec<String>>()
+                .join("\n");
 
-        Paragraph::new(board)
+            Paragraph::new(board)
+        }
     }
     pub fn draw(&self, f: &mut Frame) {
         let layout = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints(vec![Constraint::Length(15), Constraint::Length(50)])
+            .constraints(vec![Constraint::Length(18), Constraint::Length(50)])
             .split(f.area());
 
         let right = Layout::default()
