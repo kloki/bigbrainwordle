@@ -1,17 +1,39 @@
+use ratatui::{
+    style::{Color, Style},
+    text::Span,
+};
+
 use crate::entropy::brain::Word;
 #[derive(Debug, Copy, Clone, PartialEq, Eq)]
 pub enum FeedbackType {
     Correct(char),
     WrongPosition(char),
     Wrong(char),
+    Empty,
 }
 
 impl FeedbackType {
-    pub fn block(&self) -> char {
-        match self {
-            FeedbackType::Correct(_) => '🟩',
-            FeedbackType::WrongPosition(_) => '🟨',
-            FeedbackType::Wrong(_) => '⬜',
+    pub fn to_widget(&self, no_emoji: bool) -> Span<'static> {
+        if no_emoji {
+            let (c, color) = match self {
+                FeedbackType::Correct(c) => (c, Color::Green),
+                FeedbackType::WrongPosition(c) => (c, Color::Yellow),
+                FeedbackType::Wrong(c) => (c, Color::DarkGray),
+                FeedbackType::Empty => {
+                    return Span::styled(" . ", Style::default().fg(Color::DarkGray))
+                }
+            };
+            Span::styled(
+                format!(" {} ", c.to_ascii_uppercase()),
+                Style::default().fg(Color::Black).bg(color),
+            )
+        } else {
+            match self {
+                FeedbackType::Correct(_) => Span::raw("🟩"),
+                FeedbackType::WrongPosition(_) => Span::raw("🟨"),
+                FeedbackType::Wrong(_) => Span::raw("⬜"),
+                FeedbackType::Empty => Span::raw("⬛"),
+            }
         }
     }
 }
@@ -23,15 +45,6 @@ pub enum FB {
     W,
 }
 
-impl From<FeedbackType> for FB {
-    fn from(value: FeedbackType) -> Self {
-        match value {
-            FeedbackType::Correct(_) => FB::C,
-            FeedbackType::WrongPosition(_) => FB::WP,
-            FeedbackType::Wrong(_) => FB::W,
-        }
-    }
-}
 #[derive(Copy, Clone)]
 pub struct Feedback {
     pub items: [FeedbackType; 5],
@@ -66,13 +79,12 @@ impl Feedback {
     }
 
     pub fn mask(&self) -> [FB; 5] {
-        [
-            self.items[0].into(),
-            self.items[1].into(),
-            self.items[2].into(),
-            self.items[3].into(),
-            self.items[4].into(),
-        ]
+        self.items.map(|item| match item {
+            FeedbackType::Correct(_) => FB::C,
+            FeedbackType::WrongPosition(_) => FB::WP,
+            FeedbackType::Wrong(_) => FB::W,
+            FeedbackType::Empty => unreachable!(),
+        })
     }
 
     pub fn is_correct(&self) -> bool {

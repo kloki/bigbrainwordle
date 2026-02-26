@@ -30,7 +30,7 @@ pub struct App {
     brain: Brain,
     row: usize,
     column: usize,
-    pub feedbacks: [[Option<FeedbackType>; 5]; 6],
+    pub feedbacks: [[FeedbackType; 5]; 6],
     current: [char; 5],
     state: AppState,
     no_emoji: bool,
@@ -55,7 +55,7 @@ impl App {
             brain,
             row: 0,
             column: 0,
-            feedbacks: [[None; 5]; 6],
+            feedbacks: [[FeedbackType::Empty; 5]; 6],
             current,
             state: AppState::Playing,
             no_emoji,
@@ -76,7 +76,7 @@ impl App {
             let feedback = Feedback::from_guess(&self.current, &solution);
 
             for i in 0..5 {
-                self.feedbacks[self.row][i] = Some(feedback.items[i]);
+                self.feedbacks[self.row][i] = feedback.items[i];
             }
             self.column = 5;
             term.draw(|f| self.draw(f))?;
@@ -111,19 +111,19 @@ impl App {
                     (KeyCode::Char('q'), _, _, _) => return Ok(()),
                     (KeyCode::Esc, _, _, _) => return Ok(()),
                     (KeyCode::Char('g'), r, c, _) if c < 5 => {
-                        self.feedbacks[r][c] = Some(FeedbackType::Correct(self.current[c]));
+                        self.feedbacks[r][c] = FeedbackType::Correct(self.current[c]);
                         self.column += 1;
                     }
                     (KeyCode::Char('y'), r, c, _) if c < 5 => {
-                        self.feedbacks[r][c] = Some(FeedbackType::WrongPosition(self.current[c]));
+                        self.feedbacks[r][c] = FeedbackType::WrongPosition(self.current[c]);
                         self.column += 1;
                     }
                     (KeyCode::Char(' '), r, c, _) if c < 5 => {
-                        self.feedbacks[r][c] = Some(FeedbackType::Wrong(self.current[c]));
+                        self.feedbacks[r][c] = FeedbackType::Wrong(self.current[c]);
                         self.column += 1;
                     }
                     (KeyCode::Backspace, r, c, _) if c > 0 => {
-                        self.feedbacks[r][c - 1] = None;
+                        self.feedbacks[r][c - 1] = FeedbackType::Empty;
                         self.column -= 1;
                     }
                     (KeyCode::Enter, _, 5, _) => {
@@ -138,13 +138,7 @@ impl App {
     }
 
     pub fn process_feedback(&mut self) {
-        let feedback = Feedback::new([
-            self.feedbacks[self.row][0].unwrap(),
-            self.feedbacks[self.row][1].unwrap(),
-            self.feedbacks[self.row][2].unwrap(),
-            self.feedbacks[self.row][3].unwrap(),
-            self.feedbacks[self.row][4].unwrap(),
-        ]);
+        let feedback = Feedback::new(self.feedbacks[self.row]);
         if feedback.is_correct() {
             self.state = AppState::Won;
             return;
@@ -158,7 +152,7 @@ impl App {
 
         if self.brain.done() && self.row != 5 {
             for i in 0..5 {
-                self.feedbacks[self.row + 1][i] = Some(FeedbackType::Correct(self.current[i]));
+                self.feedbacks[self.row + 1][i] = FeedbackType::Correct(self.current[i]);
             }
             self.state = AppState::Won;
         } else if self.row == 5 {
@@ -189,58 +183,20 @@ impl App {
     }
 
     pub fn board(&self) -> impl Widget {
-        if self.no_emoji {
-            let lines: Vec<Line> = self
-                .feedbacks
-                .iter()
-                .enumerate()
-                .map(|(i, row)| {
-                    let prefix = if i == self.row { ">" } else { " " };
-                    let mut spans = vec![Span::raw(prefix)];
-                    for feedback in row.iter() {
-                        let span = match feedback {
-                            Some(FeedbackType::Correct(c)) => Span::styled(
-                                format!(" {} ", c.to_ascii_uppercase()),
-                                Style::default().fg(Color::Black).bg(Color::Green),
-                            ),
-                            Some(FeedbackType::WrongPosition(c)) => Span::styled(
-                                format!(" {} ", c.to_ascii_uppercase()),
-                                Style::default().fg(Color::Black).bg(Color::Yellow),
-                            ),
-                            Some(FeedbackType::Wrong(c)) => Span::styled(
-                                format!(" {} ", c.to_ascii_uppercase()),
-                                Style::default().fg(Color::Black).bg(Color::DarkGray),
-                            ),
-                            None => Span::styled(" . ", Style::default().fg(Color::DarkGray)),
-                        };
-                        spans.push(span);
-                    }
-                    Line::from(spans)
-                })
-                .collect();
-            Paragraph::new(lines)
-        } else {
-            let board = self
-                .feedbacks
-                .iter()
-                .map(|row| {
-                    row.iter()
-                        .map(|feedback| feedback.map_or('⬛', |f| f.block()))
-                        .collect::<String>()
-                })
-                .enumerate()
-                .map(|(i, x)| {
-                    if i == self.row {
-                        format!(">{}", x)
-                    } else {
-                        format!(" {}", x)
-                    }
-                })
-                .collect::<Vec<String>>()
-                .join("\n");
-
-            Paragraph::new(board)
-        }
+        let lines: Vec<Line> = self
+            .feedbacks
+            .iter()
+            .enumerate()
+            .map(|(i, row)| {
+                let prefix = if i == self.row { ">" } else { " " };
+                let mut spans = vec![Span::raw(prefix)];
+                for feedback in row.iter() {
+                    spans.push(feedback.to_widget(self.no_emoji));
+                }
+                Line::from(spans)
+            })
+            .collect();
+        Paragraph::new(lines)
     }
     pub fn draw(&self, f: &mut Frame) {
         let layout = Layout::default()

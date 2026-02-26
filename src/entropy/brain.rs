@@ -79,6 +79,7 @@ impl Brain {
                     excluded_chars_infered.push(*c);
                     exclude_mask.push(i)
                 }
+                FeedbackType::Empty => unreachable!(),
             }
         }
 
