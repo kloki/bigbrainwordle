@@ -12,7 +12,7 @@ use ratatui::{
 
 use crate::{
     entropy::{
-        brain::Brain,
+        brain::{Brain, Word},
         feedback::{Feedback, FeedbackType},
     },
     text,
@@ -33,6 +33,7 @@ pub struct App {
     pub feedbacks: [[Option<FeedbackType>; 5]; 6],
     current: [char; 5],
     state: AppState,
+    no_emoji: bool,
 }
 
 pub fn red_text<'a>(text: &'a str) -> Text<'a> {
@@ -48,7 +49,7 @@ pub fn message<'a>(text: (&'a str, &'a str), highlight: String) -> Text<'a> {
 }
 
 impl App {
-    pub fn new(brain: Brain) -> Self {
+    pub fn new(brain: Brain, no_emoji: bool) -> Self {
         let current = brain.suggest(false).expect("No words to suggest");
         Self {
             brain,
@@ -57,48 +58,81 @@ impl App {
             feedbacks: [[None; 5]; 6],
             current,
             state: AppState::Playing,
+            no_emoji,
         }
     }
 
     pub fn current_word(&self) -> String {
         self.current.iter().collect::<String>()
     }
+    pub fn run_autosolve<B: Backend>(
+        &mut self,
+        solution: Word,
+        term: &mut Terminal<B>,
+    ) -> io::Result<()> {
+        term.draw(|f| self.draw(f))?;
+
+        loop {
+            let feedback = Feedback::from_guess(&self.current, &solution);
+
+            for i in 0..5 {
+                self.feedbacks[self.row][i] = Some(feedback.items[i]);
+            }
+            self.column = 5;
+            term.draw(|f| self.draw(f))?;
+
+            self.process_feedback();
+
+            if self.state != AppState::Playing {
+                break;
+            }
+
+            self.column = 0;
+            self.row += 1;
+
+            term.draw(|f| self.draw(f))?;
+        }
+
+        term.draw(|f| self.draw(f))?;
+
+        loop {
+            if let Event::Key(_) = event::read()? {
+                return Ok(());
+            }
+        }
+    }
+
     pub fn run<B: Backend>(&mut self, term: &mut Terminal<B>) -> io::Result<()> {
         loop {
             term.draw(|f| self.draw(f))?;
             if let Event::Key(key) = event::read()? {
-                match (key.code, self.row, self.column) {
-                    (KeyCode::Char('q'), _, _) => return Ok(()),
-                    (KeyCode::Esc, _, _) => return Ok(()),
-                    (KeyCode::Char('g'), r, c) if c < 5 => {
+                match (key.code, self.row, self.column, &self.state) {
+                    (_, _, _, state) if state != &AppState::Playing => return Ok(()),
+                    (KeyCode::Char('q'), _, _, _) => return Ok(()),
+                    (KeyCode::Esc, _, _, _) => return Ok(()),
+                    (KeyCode::Char('g'), r, c, _) if c < 5 => {
                         self.feedbacks[r][c] = Some(FeedbackType::Correct(self.current[c]));
                         self.column += 1;
                     }
-                    (KeyCode::Char('y'), r, c) if c < 5 => {
+                    (KeyCode::Char('y'), r, c, _) if c < 5 => {
                         self.feedbacks[r][c] = Some(FeedbackType::WrongPosition(self.current[c]));
                         self.column += 1;
                     }
-                    (KeyCode::Char(' '), r, c) if c < 5 => {
+                    (KeyCode::Char(' '), r, c, _) if c < 5 => {
                         self.feedbacks[r][c] = Some(FeedbackType::Wrong(self.current[c]));
                         self.column += 1;
                     }
-                    (KeyCode::Backspace, r, c) if c > 0 => {
+                    (KeyCode::Backspace, r, c, _) if c > 0 => {
                         self.feedbacks[r][c - 1] = None;
                         self.column -= 1;
                     }
-                    (KeyCode::Enter, _, 5) => {
+                    (KeyCode::Enter, _, 5, _) => {
                         self.process_feedback();
                         self.column = 0;
                         self.row += 1;
                     }
                     _ => {}
                 }
-            }
-
-            if self.state != AppState::Playing {
-                //draw again for the last time
-                term.draw(|f| self.draw(f))?;
-                return Ok(());
             }
         }
     }
@@ -123,7 +157,9 @@ impl App {
         }
 
         if self.brain.done() && self.row != 5 {
-            self.feedbacks[self.row + 1] = [Some(FeedbackType::Correct('a')); 5];
+            for i in 0..5 {
+                self.feedbacks[self.row + 1][i] = Some(FeedbackType::Correct(self.current[i]));
+            }
             self.state = AppState::Won;
         } else if self.row == 5 {
             self.state = AppState::Lost;
@@ -153,31 +189,63 @@ impl App {
     }
 
     pub fn board(&self) -> impl Widget {
-        let board = self
-            .feedbacks
-            .iter()
-            .map(|row| {
-                row.iter()
-                    .map(|feedback| feedback.map_or('⬛', |f| f.block()))
-                    .collect::<String>()
-            })
-            .enumerate()
-            .map(|(i, x)| {
-                if i == self.row {
-                    format!(">{}", x)
-                } else {
-                    format!(" {}", x)
-                }
-            })
-            .collect::<Vec<String>>()
-            .join("\n");
+        if self.no_emoji {
+            let lines: Vec<Line> = self
+                .feedbacks
+                .iter()
+                .enumerate()
+                .map(|(i, row)| {
+                    let prefix = if i == self.row { ">" } else { " " };
+                    let mut spans = vec![Span::raw(prefix)];
+                    for feedback in row.iter() {
+                        let span = match feedback {
+                            Some(FeedbackType::Correct(c)) => Span::styled(
+                                format!(" {} ", c.to_ascii_uppercase()),
+                                Style::default().fg(Color::Black).bg(Color::Green),
+                            ),
+                            Some(FeedbackType::WrongPosition(c)) => Span::styled(
+                                format!(" {} ", c.to_ascii_uppercase()),
+                                Style::default().fg(Color::Black).bg(Color::Yellow),
+                            ),
+                            Some(FeedbackType::Wrong(c)) => Span::styled(
+                                format!(" {} ", c.to_ascii_uppercase()),
+                                Style::default().fg(Color::Black).bg(Color::DarkGray),
+                            ),
+                            None => Span::styled(" . ", Style::default().fg(Color::DarkGray)),
+                        };
+                        spans.push(span);
+                    }
+                    Line::from(spans)
+                })
+                .collect();
+            Paragraph::new(lines)
+        } else {
+            let board = self
+                .feedbacks
+                .iter()
+                .map(|row| {
+                    row.iter()
+                        .map(|feedback| feedback.map_or('⬛', |f| f.block()))
+                        .collect::<String>()
+                })
+                .enumerate()
+                .map(|(i, x)| {
+                    if i == self.row {
+                        format!(">{}", x)
+                    } else {
+                        format!(" {}", x)
+                    }
+                })
+                .collect::<Vec<String>>()
+                .join("\n");
 
-        Paragraph::new(board)
+            Paragraph::new(board)
+        }
     }
     pub fn draw(&self, f: &mut Frame) {
         let layout = Layout::default()
             .direction(Direction::Horizontal)
-            .constraints(vec![Constraint::Length(15), Constraint::Length(50)])
+            .constraints(vec![Constraint::Length(18), Constraint::Length(50)])
             .split(f.area());
 
         let right = Layout::default()

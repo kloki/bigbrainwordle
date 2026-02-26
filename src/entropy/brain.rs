@@ -26,7 +26,7 @@ impl Brain {
 
     pub fn suggest(&self, last_round: bool) -> Result<Word, &'static str> {
         if self.options.is_empty() {
-            return Err("No possible anwers?");
+            return Err("No possible answers?");
         }
         if self.options.len() == 1 {
             return Ok(self.options[0]);
@@ -35,7 +35,7 @@ impl Brain {
             return Ok(*self
                 .options
                 .choose(&mut rand::thread_rng())
-                .expect("No possible anwers?"));
+                .expect("No possible answers?"));
         }
         if self.options.contains(&OPENER) {
             return Ok(OPENER);

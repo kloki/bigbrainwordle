@@ -5,13 +5,16 @@ pub const OPENING: (&str, &str) = (
 
 pub const CLOSING: (&str, &str) = ("Last change! Lets try ", ". 🤞");
 
-pub const WON: (&str, &str) = ("🎉 Solved! The word was ", ". Bye! 👋");
+pub const WON: (&str, &str) = (
+    "🎉 Solved! The word was ",
+    ". Press the 'ANY' key to leave.",
+);
 
-pub const LOST: &str = "Lost! We ran out of words to suggest. Better luck next time!";
+pub const LOST: &str = "Lost! 🤦 We ran out of words to suggest. Better luck next time!. Press the 'ANY' key to leave.";
 
-pub const FAILED: &str = "👹 None the words I know match the feedback. Either we made a mistake or the word is not in my dictionary.";
+pub const FAILED: &str = "👹 None the words I know match the feedback. Either we made a mistake or the word is not in my dictionary. Press the 'ANY' key to leave.";
 
-pub const SUGGESTIONS: [(&str, &str); 8] = [
+pub const SUGGESTIONS: [(&str, &str); 20] = [
     ("Interesting! 🧐 Next, try ", "."),
     ("🔥 Now go with ", "."),
     ("Victory is close. Let's try ", ". 🥇"),
@@ -20,9 +23,20 @@ pub const SUGGESTIONS: [(&str, &str); 8] = [
     ("Next ", ". We are on course 🧭"),
     ("Why don't we give ", " a shot? 🤷"),
     ("Let's test ", " and find out! 🚀"),
+    ("My brain says ", ". Trust me. 🧠"),
+    ("The stars align for ", ". ✨"),
+    ("According to my calculations... ", ". 🤓"),
+    ("I've got a feeling about ", "! 🎲"),
+    ("Elementary, my dear Watson. Try ", ". 🔍"),
+    ("The oracle whispers ", ". 🔮"),
+    ("Big brain move: ", ". 💡"),
+    ("Plot twist! Go with ", ". 🎬"),
+    ("Science says ", ". Don't argue with science. 🧪"),
+    ("I'd bet my circuits on ", ". 🤖"),
+    ("Bold strategy: ", ". Let's see if it pays off. 🎰"),
+    ("Chef's kiss. Try ", ". 👨‍🍳"),
 ];
 
 pub fn suggestion_text(index: usize) -> (&'static str, &'static str) {
-    // This is a simple way to get a radnom suggestion but we the seem between renders.
-    SUGGESTIONS[index % 8]
+    SUGGESTIONS[index % SUGGESTIONS.len()]
 }
