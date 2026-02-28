@@ -1,8 +1,7 @@
 use std::io;
 
 use ratatui::{
-    Frame, Terminal,
-    backend::Backend,
+    DefaultTerminal, Frame,
     crossterm::event::{self, Event, KeyCode},
     layout::{Constraint, Direction, Layout},
     style::{Color, Style},
@@ -65,10 +64,10 @@ impl App {
     pub fn current_word(&self) -> String {
         self.current.iter().collect::<String>()
     }
-    pub fn run_autosolve<B: Backend>(
+    pub fn run_autosolve(
         &mut self,
         solution: Word,
-        term: &mut Terminal<B>,
+        term: &mut DefaultTerminal,
     ) -> io::Result<()> {
         term.draw(|f| self.draw(f))?;
 
@@ -102,7 +101,7 @@ impl App {
         }
     }
 
-    pub fn run<B: Backend>(&mut self, term: &mut Terminal<B>) -> io::Result<()> {
+    pub fn run(&mut self, term: &mut DefaultTerminal) -> io::Result<()> {
         loop {
             term.draw(|f| self.draw(f))?;
             if let Event::Key(key) = event::read()? {
