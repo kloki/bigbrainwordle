@@ -161,22 +161,22 @@ impl App {
     }
 
     pub fn header(&self) -> impl Widget {
-        Paragraph::new("BigBrainWordle 󰧑").style(Style::default().fg(Color::Green))
+        Paragraph::new("BigBrainWordle").style(Style::default().fg(Color::Green))
     }
 
     pub fn instuctions(&self) -> impl Widget {
         let content = match self.state {
             AppState::Playing => match self.row {
-                0 => message(text::OPENING, self.current_word()),
-                5 => message(text::CLOSING, self.current_word()),
+                0 => message(text::opening_text(self.no_emoji), self.current_word()),
+                5 => message(text::closing_text(self.no_emoji), self.current_word()),
                 _ => message(
-                    text::suggestion_text(self.brain.options.len()),
+                    text::suggestion_text(self.brain.options.len(), self.no_emoji),
                     self.current_word(),
                 ),
             },
-            AppState::Won => message(text::WON, self.current_word()),
-            AppState::Lost => red_text(text::LOST),
-            AppState::Failed => red_text(text::FAILED),
+            AppState::Won => message(text::won_text(self.no_emoji), self.current_word()),
+            AppState::Lost => red_text(text::lost_text(self.no_emoji)),
+            AppState::Failed => red_text(text::failed_text(self.no_emoji)),
         };
 
         Paragraph::new(content).wrap(Wrap { trim: true })
